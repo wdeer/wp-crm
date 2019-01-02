@@ -77,12 +77,12 @@ class WP_CRM_Core {
   function init() {
     global $wp_crm;
 
-    /* Init action hook 
+    /* Init action hook
        invoking this before the user level checkpoint.
     */
     do_action( 'wp_crm_init' );
 
-  
+
 
     wp_register_script( 'google-jsapi', 'https://www.google.com/jsapi' );
     wp_register_script( 'recaptcha', 'https://www.google.com/recaptcha/api.js?onload=crm_recaptcha_onload&render=explicit' );
@@ -185,7 +185,7 @@ class WP_CRM_Core {
     add_action( 'load-user-new.php', array( 'WP_CRM_Core', 'crm_page_traditional_user_page' ) );
     add_action( "deleted_user", array( 'WP_CRM_F', "deleted_user" ) );
     add_filter( 'set-screen-option', array( 'WP_CRM_F', "crm_set_option" ), 10, 3 );
-    add_action( 'wp_ajax_wpc_ajax_clear_cache', create_function( "", 'echo WP_CRM_F::clear_cache(); die();' ) );
+    add_action( 'wp_ajax_wpc_ajax_clear_cache', function() echo WP_CRM_F::clear_cache(); die(); );
     add_action( "wp_ajax_wp_crm_user_search_network", array( 'WP_CRM_AJAX', 'user_search_network' ) );
   }
 
@@ -211,7 +211,7 @@ class WP_CRM_Core {
     //** Load Localization early so plugins can use them as well */
     //** Try to generate static localization script. It can be flushed on Clear Cache! */
     // Disabled because server side caching causing problem.
-    
+
     //if( $l10n_url = $this->maybe_generate_l10n_script() ) {
     //  wp_register_script( 'wpc-localization', $l10n_url, array() );
     //} else {
@@ -434,7 +434,7 @@ class WP_CRM_Core {
     $contextual_help[ 'General Help' ][ ] = '<li>' . __( 'Fill up the form on <b>Register a new site</b> section and click <b>Register</b>.', ud_get_wp_crm()->domain ) . '</li>';
     $contextual_help[ 'General Help' ][ ] = '<li>' . __( 'Copy the <b>Site key</b> and <b>Secret key</b> to the <b>reCAPTCHA keys</b> in <b>Main</b> tab of <b>Settings page</b>.', ud_get_wp_crm()->domain ) . '</li>';
     $contextual_help[ 'General Help' ][ ] = '</ol>';
-    
+
     $contextual_help[ 'Shortcode Forms' ][ ] = '<h3>' . __( 'Shortcode Forms', ud_get_wp_crm()->domain ) . '</h3>';
     $contextual_help[ 'Shortcode Forms' ][ ] = '<p>' . __( 'Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available shortcode form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. ', ud_get_wp_crm()->domain ) . '</p>';
 
@@ -476,7 +476,7 @@ class WP_CRM_Core {
    */
   static function admin_init() {
     global $wp_crm, $wpdb, $current_user;
-    
+
     //** Check if current page is profile page, and load global variable */
     WP_CRM_F::maybe_load_profile();
 
@@ -487,9 +487,9 @@ class WP_CRM_Core {
     add_filter( "manage_toplevel_page_wp_crm-network_columns", array( 'WP_CRM_Core', "overview_columns" ) );
 
     if ( !empty( $wp_crm[ 'system' ][ 'pages' ][ 'settings' ] ) ) {
-      add_action( 'admin_print_scripts-' . $wp_crm[ 'system' ][ 'pages' ][ 'settings' ], create_function( '', "wp_enqueue_script('jquery-ui-tabs');wp_enqueue_script('wp-crm-jquery-cookie');" ) );
+      add_action( 'admin_print_scripts-' . $wp_crm[ 'system' ][ 'pages' ][ 'settings' ], function() wp_enqueue_script('jquery-ui-tabs');wp_enqueue_script('wp-crm-jquery-cookie'); );
     }
-    
+
     add_action( 'load-crm_page_wp_crm_add_new', array( 'WP_CRM_Core', 'wp_crm_save_user_data' ) );
 
     // Add metaboxes
@@ -538,7 +538,7 @@ class WP_CRM_Core {
           $user_id = $_REQUEST[ 'user_id' ];
 
           if ( wp_verify_nonce( $_wpnonce, 'wp-crm-delete-user-' . $user_id ) ) {
-            
+
             //** Get IDs of users posts */
             $post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_author = %d", $user_id ) );
 
@@ -585,7 +585,7 @@ class WP_CRM_Core {
       $called = true;
       if ( empty( $_REQUEST[ 'user_id' ] ) ) {
         $_GET[ 'user_id' ] = $_REQUEST[ 'user_id' ] = $current_user->ID;
-        
+
         //** Re-set global $wp_crm_user. It was set earlier on admin_init action. */
         WP_CRM_F::maybe_load_profile( $current_user->ID, true );
       }
@@ -771,7 +771,7 @@ class WP_CRM_Core {
     $wp_crm[ 'system' ][ 'pages' ][ 'overview' ] = add_submenu_page( 'wp_crm', __( 'All People', ud_get_wp_crm()->domain ), __( 'All People', ud_get_wp_crm()->domain ), $capability, 'wp_crm', array( 'WP_CRM_Core', 'page_loader' ) );
 
     $wp_crm[ 'system' ][ 'pages' ][ 'add_new' ] = add_submenu_page( 'wp_crm', __( 'New Person', ud_get_wp_crm()->domain ), __( 'New Person', ud_get_wp_crm()->domain ), $capability, 'wp_crm_add_new', array( 'WP_CRM_Core', 'page_loader' ) );
-    
+
     add_submenu_page( 'wp_crm', __( 'My Profile', ud_get_wp_crm()->domain ), __( 'My Profile', ud_get_wp_crm()->domain ), $capability, 'wp_crm_my_profile', array( 'WP_CRM_Core', 'page_loader' ) );
     $wp_crm[ 'system' ][ 'pages' ][ 'your_profile' ] = $wp_crm[ 'system' ][ 'pages' ][ 'add_new' ];
 
